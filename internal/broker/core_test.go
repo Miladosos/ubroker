@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arcana261/ubroker/internal/broker"
-	"github.com/arcana261/ubroker/pkg/ubroker"
 	"github.com/pkg/errors"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/miladosos/ubroker/internal/broker"
+	"github.com/miladosos/ubroker/pkg/ubroker"
 )
 
 type CoreBrokerTestSuite struct {
