@@ -77,11 +77,11 @@ type publishResponse struct {
 }
 
 func (c *core) Delivery(ctx context.Context) (<-chan ubroker.Delivery, error) {
-	if c.isCanceled(ctx) {
+	if isCanceledContext(ctx) {
 		return nil, ctx.Err()
 	}
 
-	if !c.start() {
+	if !c.startWorking() {
 		return nil, ubroker.ErrClosed
 	}
 	defer c.working.Done()
@@ -90,11 +90,11 @@ func (c *core) Delivery(ctx context.Context) (<-chan ubroker.Delivery, error) {
 }
 
 func (c *core) Acknowledge(ctx context.Context, id int) error {
-	if c.isCanceled(ctx) {
+	if isCanceledContext(ctx) {
 		return ctx.Err()
 	}
 
-	if !c.start() {
+	if !c.startWorking() {
 		return ubroker.ErrClosed
 	}
 	defer c.working.Done()
@@ -118,11 +118,11 @@ func (c *core) Acknowledge(ctx context.Context, id int) error {
 }
 
 func (c *core) ReQueue(ctx context.Context, id int) error {
-	if c.isCanceled(ctx) {
+	if isCanceledContext(ctx) {
 		return ctx.Err()
 	}
 
-	if !c.start() {
+	if !c.startWorking() {
 		return ubroker.ErrClosed
 	}
 	defer c.working.Done()
@@ -146,11 +146,11 @@ func (c *core) ReQueue(ctx context.Context, id int) error {
 }
 
 func (c *core) Publish(ctx context.Context, message ubroker.Message) error {
-	if c.isCanceled(ctx) {
+	if isCanceledContext(ctx) {
 		return ctx.Err()
 	}
 
-	if !c.start() {
+	if !c.startWorking() {
 		return ubroker.ErrClosed
 	}
 	defer c.working.Done()
@@ -172,7 +172,7 @@ func (c *core) Publish(ctx context.Context, message ubroker.Message) error {
 
 func (c *core) Close() error {
 	if !c.startClosing() {
-		return nil
+		return errors.New("can not close channel, closing in progress")
 	}
 	c.working.Wait()
 	close(c.closed)
@@ -222,7 +222,7 @@ func (c *core) startDelivery() {
 	}
 }
 
-func (c *core) start() bool {
+func (c *core) startWorking() bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -246,11 +246,9 @@ func (c *core) startClosing() bool {
 		close(c.closing)
 		return true
 	}
-	c.working.Add(1)
-	return true
 }
 
-func (c *core) isCanceled(ctx context.Context) bool {
+func isCanceledContext(ctx context.Context) bool {
 	select {
 	case <-ctx.Done():
 		return true
