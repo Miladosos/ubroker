@@ -1,2 +1,10 @@
+# binary
 /ubroker
 *.pb.go
+
+# intelliJ
+.idea/
+
+# VSCode
+.vscode/
+debug.test
